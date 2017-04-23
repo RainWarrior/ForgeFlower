@@ -1,4 +1,4 @@
-From f3bb12d0b8f601ea15ea8e3a6992502bcb07acdc Mon Sep 17 00:00:00 2001
+From f5d6b47d5b68578421ba6758006d5328ca29375a Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Tue, 18 Apr 2017 19:20:27 -0700
 Subject: [PATCH] Fix byte/short constants as arguments to functions. We need
@@ -6,7 +6,7 @@ Subject: [PATCH] Fix byte/short constants as arguments to functions. We need
 
 
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java b/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
-index e1e29cc..dde47ab 100644
+index c707161..4d96913 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
 @@ -878,13 +878,24 @@ public class ExprProcessor implements CodeConstants {
@@ -28,7 +28,7 @@ index e1e29cc..dde47ab 100644
  
      boolean cast =
        castAlways ||
-       (!leftType.isSuperset(rightType) && (rightType.equals(VarType.VARTYPE_OBJECT) || leftType.type != CodeConstants.TYPE_OBJECT)) ||
+       (Exprent.needsCast(leftType, rightType, false)) ||
        (castNull && rightType.type == CodeConstants.TYPE_NULL && !UNDEFINED_TYPE_STRING.equals(getTypeName(leftType))) ||
 -      (isIntConstant(exprent) && rightType.isStrictSuperset(leftType));
 +      (isIntConstant(exprent) && ((castConstants && leftType.type != CodeConstants.TYPE_INT) || rightType.isStrictSuperset(leftType)));
@@ -36,15 +36,15 @@ index e1e29cc..dde47ab 100644
      boolean quote = cast && exprent.getPrecedence() >= FunctionExprent.getPrecedence(FunctionExprent.FUNCTION_CAST);
  
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-index 6460138..1917cf8 100644
+index 4c518db..d3980c6 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-@@ -447,7 +447,7 @@ public class InvocationExprent extends Exprent {
-           //type = exprType;
-         }
+@@ -503,7 +503,7 @@ public class InvocationExprent extends Exprent {
+           type = exprType;
+         }*/
  
--        ExprProcessor.getCastedExprent(lstParameters.get(i), descriptor.params[i], buff, indent, true, ambiguous, tracer);
-+        ExprProcessor.getCastedExprent(lstParameters.get(i), descriptor.params[i], buff, indent, true, ambiguous, true, tracer);
+-        ExprProcessor.getCastedExprent(lstParameters.get(i), type, buff, indent, true, ambiguous, tracer);
++        ExprProcessor.getCastedExprent(lstParameters.get(i), type, buff, indent, true, ambiguous, true, tracer);
          buf.append(buff);
  
          firstParameter = false;
@@ -378,5 +378,5 @@ index 974898e..8c0311d 100644
    public void m() { }
  
 -- 
-2.10.0.windows.1
+2.11.0
 

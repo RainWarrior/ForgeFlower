@@ -1,4 +1,4 @@
-From 48ab1679e13cd17707b6fad6d3119124cc270b4b Mon Sep 17 00:00:00 2001
+From 8fc40d0a3f39d74c659e81f8207359af56b9d406 Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Fri, 14 Apr 2017 10:13:01 -0700
 Subject: [PATCH] Improvements to var++ and var--
@@ -111,15 +111,13 @@ index 76f5b98..96dd849 100644
            }
          }
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/ConstExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/ConstExprent.java
-index 335c318..b200b5e 100644
+index f6812fb..9fab0f0 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/ConstExprent.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/ConstExprent.java
-@@ -388,7 +388,12 @@ public class ConstExprent extends Exprent {
-   public void getBytecodeRange(BitSet values) {
-     measureBytecode(values);
+@@ -400,6 +400,11 @@ public class ConstExprent extends Exprent {
+     return super.getInferredExprType(upperBound);
    }
--  
-+
+ 
 +  @Override
 +  public String toString() {
 +    return "const(" + toJava(0, new BytecodeMappingTracer()) + ")";
@@ -323,5 +321,5 @@ index 0000000..0a062be
 +}
 \ No newline at end of file
 -- 
-2.10.0.windows.1
+2.11.0
 
