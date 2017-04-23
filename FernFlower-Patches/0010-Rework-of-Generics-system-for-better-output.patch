@@ -1,4 +1,4 @@
-From 084ba80a62845252d70e3fb6b9b5e371d9b50aca Mon Sep 17 00:00:00 2001
+From e9c3ec6111ba05aeddcc6a8729bbaf3633fd52de Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Fri, 14 Apr 2017 17:09:41 -0700
 Subject: [PATCH] Rework of Generics system for better output
@@ -872,7 +872,7 @@ index cbc78b5..0fd47dc 100644
        case FUNCTION_ARRAY_LENGTH:
          Exprent arr = lstOperands.get(0);
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-index a38c2ee..4c518db 100644
+index a38c2ee..c29f06f 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
 @@ -32,6 +32,8 @@ import org.jetbrains.java.decompiler.struct.consts.LinkConstant;
@@ -955,7 +955,7 @@ index a38c2ee..4c518db 100644
    @Override
    public CheckTypesResult checkExprTypeBounds() {
      CheckTypesResult result = new CheckTypesResult();
-@@ -215,6 +274,102 @@ public class InvocationExprent extends Exprent {
+@@ -215,6 +274,108 @@ public class InvocationExprent extends Exprent {
  
      tracer.addMapping(bytecode);
  
@@ -1049,7 +1049,13 @@ index a38c2ee..4c518db 100644
 +          }
 +          for (int p = 0; p < signature.fparameters.size(); p++) {
 +            VarType type = GenericType.parse("T" + signature.fparameters.get(p) + ";");
-+            genericArgs.add(type.remap(genArgs));
++            VarType newType = type.remap(genArgs);
++            if(type == newType) {
++              // some args are not remapped, don't use any, rely on javac to infer them
++              genericArgs.clear();
++              break;
++            }
++            genericArgs.add(newType);
 +          }
 +        }
 +      }
@@ -1058,7 +1064,7 @@ index a38c2ee..4c518db 100644
      if (isStatic) {
        ClassNode node = (ClassNode)DecompilerContext.getProperty(DecompilerContext.CURRENT_CLASS_NODE);
        if (node == null || !classname.equals(node.classStruct.qualifiedName)) {
-@@ -258,7 +413,7 @@ public class InvocationExprent extends Exprent {
+@@ -258,7 +419,7 @@ public class InvocationExprent extends Exprent {
          else if (instance != null) {
            TextBuffer res = instance.toJava(indent, tracer);
  
@@ -1067,7 +1073,7 @@ index a38c2ee..4c518db 100644
            VarType leftType = new VarType(CodeConstants.TYPE_OBJECT, 0, classname);
  
            if (rightType.equals(VarType.VARTYPE_OBJECT) && !leftType.equals(rightType)) {
-@@ -287,6 +442,7 @@ public class InvocationExprent extends Exprent {
+@@ -287,6 +448,7 @@ public class InvocationExprent extends Exprent {
  
          if (buf.length() > 0) {
            buf.append(".");
@@ -1075,7 +1081,7 @@ index a38c2ee..4c518db 100644
          }
  
          buf.append(name);
-@@ -315,26 +471,7 @@ public class InvocationExprent extends Exprent {
+@@ -315,26 +477,7 @@ public class InvocationExprent extends Exprent {
          }
      }
  
@@ -1083,7 +1089,7 @@ index a38c2ee..4c518db 100644
 -    boolean isEnum = false;
 -    if (functype == TYP_INIT) {
 -      ClassNode newNode = DecompilerContext.getClassProcessor().getMapRootClasses().get(classname);
--
+ 
 -      if (newNode != null) {  // own class
 -        if (newNode.getWrapper() != null) {
 -          sigFields = newNode.getWrapper().getMethodWrapper(CodeConstants.INIT_NAME, stringDescriptor).signatureFields;
@@ -1097,12 +1103,12 @@ index a38c2ee..4c518db 100644
 -        isEnum = newNode.classStruct.hasModifier(CodeConstants.ACC_ENUM) && DecompilerContext.getOption(IFernflowerPreferences.DECOMPILE_ENUM);
 -      }
 -    }
- 
+-
 -    BitSet setAmbiguousParameters = getAmbiguousParameters();
  
      boolean firstParameter = true;
      int start = isEnum ? 2 : 0;
-@@ -346,7 +483,27 @@ public class InvocationExprent extends Exprent {
+@@ -346,7 +489,27 @@ public class InvocationExprent extends Exprent {
  
          TextBuffer buff = new TextBuffer();
          boolean ambiguous = setAmbiguousParameters.get(i);
@@ -1131,7 +1137,7 @@ index a38c2ee..4c518db 100644
          buf.append(buff);
  
          firstParameter = false;
-@@ -358,12 +515,11 @@ public class InvocationExprent extends Exprent {
+@@ -358,12 +521,11 @@ public class InvocationExprent extends Exprent {
      return buf;
    }
  
@@ -1147,7 +1153,7 @@ index a38c2ee..4c518db 100644
      nextMethod:
      for (StructMethod mt : cl.getMethods()) {
        if (name.equals(mt.getName())) {
-@@ -374,11 +530,19 @@ public class InvocationExprent extends Exprent {
+@@ -374,11 +536,19 @@ public class InvocationExprent extends Exprent {
                continue nextMethod;
              }
            }
@@ -1169,7 +1175,7 @@ index a38c2ee..4c518db 100644
  
      // check if a call is unambiguous
      StructMethod mt = cl.getMethod(InterpreterUtil.makeUniqueKey(name, stringDescriptor));
-@@ -392,7 +556,9 @@ public class InvocationExprent extends Exprent {
+@@ -392,7 +562,9 @@ public class InvocationExprent extends Exprent {
              break;
            }
          }
@@ -1180,7 +1186,7 @@ index a38c2ee..4c518db 100644
        }
      }
  
-@@ -400,7 +566,13 @@ public class InvocationExprent extends Exprent {
+@@ -400,7 +572,13 @@ public class InvocationExprent extends Exprent {
      BitSet ambiguous = new BitSet(descriptor.params.length);
      for (int i = 0; i < descriptor.params.length; i++) {
        VarType paramType = descriptor.params[i];

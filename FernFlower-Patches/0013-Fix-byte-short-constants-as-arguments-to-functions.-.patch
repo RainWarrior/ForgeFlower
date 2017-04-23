@@ -1,4 +1,4 @@
-From f5d6b47d5b68578421ba6758006d5328ca29375a Mon Sep 17 00:00:00 2001
+From db9f093349a151799497d6b5fbf3e6c48829cba5 Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Tue, 18 Apr 2017 19:20:27 -0700
 Subject: [PATCH] Fix byte/short constants as arguments to functions. We need
@@ -36,10 +36,10 @@ index c707161..4d96913 100644
      boolean quote = cast && exprent.getPrecedence() >= FunctionExprent.getPrecedence(FunctionExprent.FUNCTION_CAST);
  
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-index 4c518db..d3980c6 100644
+index c29f06f..7d98a4b 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-@@ -503,7 +503,7 @@ public class InvocationExprent extends Exprent {
+@@ -509,7 +509,7 @@ public class InvocationExprent extends Exprent {
            type = exprType;
          }*/
  
