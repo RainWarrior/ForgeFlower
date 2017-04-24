@@ -1,4 +1,4 @@
-From 8ab9724c516b985f00bf6b162f51a0571d452762 Mon Sep 17 00:00:00 2001
+From 9f596b25a00084e50f8ff294e9153c16df483db0 Mon Sep 17 00:00:00 2001
 From: LexManos <LexManos@gmail.com>
 Date: Tue, 18 Apr 2017 19:20:27 -0700
 Subject: [PATCH] Fix byte/short constants as arguments to functions. We need
@@ -6,10 +6,10 @@ Subject: [PATCH] Fix byte/short constants as arguments to functions. We need
 
 
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java b/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
-index 52e41bf..45a2455 100644
+index 7099402..875eb34 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/ExprProcessor.java
-@@ -878,13 +878,24 @@ public class ExprProcessor implements CodeConstants {
+@@ -878,6 +878,17 @@ public class ExprProcessor implements CodeConstants {
                                           boolean castNull,
                                           boolean castAlways,
                                           BytecodeMappingTracer tracer) {
@@ -26,20 +26,21 @@ index 52e41bf..45a2455 100644
 +                                         BytecodeMappingTracer tracer) {
      VarType rightType = exprent.getInferredExprType(leftType);
  
-     boolean cast =
+     boolean skipNullCast = UNDEFINED_TYPE_STRING.equals(getTypeName(leftType)) ||
+@@ -888,7 +899,7 @@ public class ExprProcessor implements CodeConstants {
        castAlways ||
        (Exprent.needsCast(leftType, rightType, false)) ||
-       (castNull && rightType.type == CodeConstants.TYPE_NULL && !UNDEFINED_TYPE_STRING.equals(getTypeName(leftType)) && leftType.type != CodeConstants.TYPE_NULL) ||
+       (castNull && rightType.type == CodeConstants.TYPE_NULL && !skipNullCast) ||
 -      (isIntConstant(exprent) && rightType.isStrictSuperset(leftType));
 +      (isIntConstant(exprent) && ((castConstants && leftType.type != CodeConstants.TYPE_INT) || rightType.isStrictSuperset(leftType)));
  
      boolean quote = cast && exprent.getPrecedence() >= FunctionExprent.getPrecedence(FunctionExprent.FUNCTION_CAST);
  
 diff --git a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-index 3a5ce6f..79ab3c1 100644
+index e03df9d..ddc3037 100644
 --- a/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
 +++ b/src/org/jetbrains/java/decompiler/modules/decompiler/exps/InvocationExprent.java
-@@ -599,7 +599,7 @@ public class InvocationExprent extends Exprent {
+@@ -597,7 +597,7 @@ public class InvocationExprent extends Exprent {
            type = exprType;
          }
  
